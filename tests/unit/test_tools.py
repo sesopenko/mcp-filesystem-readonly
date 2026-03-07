@@ -52,7 +52,7 @@ def test_list_folder_entry_fields(tmp_path: Path) -> None:
 
     assert len(result) == 1
     entry = result[0]
-    assert set(entry.keys()) == {"name", "size_mb", "date_created", "date_modified", "is_folder"}
+    assert set(entry.keys()) == {"name", "size_mb", "is_folder"}
 
 
 def test_list_folder_entry_name_is_basename(tmp_path: Path) -> None:
@@ -65,7 +65,7 @@ def test_list_folder_entry_name_is_basename(tmp_path: Path) -> None:
 
 
 def test_list_folder_size_mb(tmp_path: Path) -> None:
-    """list_folder reports correct size_mb for files and 0.0 for directories."""
+    """list_folder reports correct size_mb for files and None for directories."""
     f = tmp_path / "data.bin"
     f.write_bytes(b"x" * 1024 * 1024)  # exactly 1 MiB
     (tmp_path / "subdir").mkdir()
@@ -74,7 +74,7 @@ def test_list_folder_size_mb(tmp_path: Path) -> None:
     by_name = {e["name"]: e for e in result}
 
     assert by_name["data.bin"]["size_mb"] == pytest.approx(1.0, rel=1e-3)
-    assert by_name["subdir"]["size_mb"] == 0.0
+    assert by_name["subdir"]["size_mb"] is None
 
 
 def test_list_folder_path_inside_second_root_accepted(tmp_path: Path) -> None:

@@ -1,7 +1,6 @@
 """MCP tool implementations for the mcp-filesystem-readonly server."""
 
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -40,8 +39,8 @@ def list_folder(
         folders_only: When ``True``, only directory entries are returned.
 
     Returns:
-        A list of dicts, each with keys ``name``, ``size_mb``, ``date_created``,
-        ``date_modified``, and ``is_folder``. ``size_mb`` is ``0.0`` for directories.
+        A list of dicts, each with keys ``name``, ``size_mb``, and ``is_folder``.
+        ``size_mb`` is ``None`` for directories and rounded to 2 decimal places for files.
 
     Raises:
         ValueError: If *path* is relative, or resolves outside all configured roots.
@@ -68,17 +67,12 @@ def list_folder(
             if folders_only and not is_folder:
                 continue
 
-            size_mb = 0.0 if is_folder else stat.st_size / (1024 * 1024)
-            created_ts = getattr(stat, "st_birthtime", stat.st_ctime)
-            date_created = datetime.fromtimestamp(created_ts, tz=UTC).isoformat()
-            date_modified = datetime.fromtimestamp(stat.st_mtime, tz=UTC).isoformat()
+            size_mb = None if is_folder else round(stat.st_size / (1024 * 1024), 2)
 
             entries.append(
                 {
                     "name": entry.name,
                     "size_mb": size_mb,
-                    "date_created": date_created,
-                    "date_modified": date_modified,
                     "is_folder": is_folder,
                 }
             )
