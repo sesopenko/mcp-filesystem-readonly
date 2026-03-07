@@ -29,7 +29,7 @@ class LoggingConfig:
 class FilesystemConfig:
     """Filesystem access settings."""
 
-    root: str
+    roots: list[str]
 
 
 @dataclass
@@ -66,7 +66,9 @@ def load_config(path: Path = Path("config.toml")) -> AppConfig:
     logging = LoggingConfig(
         level=raw["logging"]["level"],
     )
+    raw_roots = raw["filesystem"]["roots"]
+    roots = [r.strip() for r in raw_roots.split(",") if r.strip()]
     filesystem = FilesystemConfig(
-        root=raw["filesystem"]["root"],
+        roots=roots,
     )
     return AppConfig(server=server, logging=logging, filesystem=filesystem)

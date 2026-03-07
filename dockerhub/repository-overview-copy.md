@@ -56,7 +56,7 @@ port = 8080        # port the MCP server listens on
 level = "info"     # log verbosity: debug, info, warning, error
 
 [filesystem]
-root = "/mnt/video"  # absolute path to the directory exposed via list_folder
+roots = "/mnt/video"  # comma-separated list of absolute paths exposed via list_folder (e.g. "/mnt/video,/mnt/music")
 ```
 
 ---
@@ -84,8 +84,8 @@ Consult your AI application's documentation for how to register an MCP server.
 | Tool | Description |
 |---|---|
 | `health_check` | Returns `{"status": "ok"}` to confirm the server is running. |
-| `get_root_path` | Returns the configured root directory path. Call this first to discover where to start listing. |
-| `list_folder` | Lists the contents of a directory within the configured root. Returns name, size (MB), dates, and type for each entry. |
+| `list_root_paths` | Returns the configured root directory paths. Call this first to discover where to start listing. |
+| `list_folder` | Lists the contents of a directory within one of the configured roots. Returns name, size (MB), dates, and type for each entry. |
 
 ---
 

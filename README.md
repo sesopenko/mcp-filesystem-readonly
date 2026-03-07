@@ -123,7 +123,7 @@ port = 8080
 level = "info"
 
 [filesystem]
-root = "/mnt/video"
+roots = "/mnt/video"
 ```
 
 ### [server]
@@ -143,7 +143,7 @@ root = "/mnt/video"
 
 | Key | Required | Description |
 |---|---|---|
-| `root` | yes | Absolute path to the directory exposed via `list_folder`. Only paths within this root can be listed. |
+| `roots` | yes | Comma-separated list of absolute paths exposed via `list_folder`. Only paths within one of these roots can be listed. |
 
 ---
 
@@ -186,13 +186,13 @@ Copy and adapt this prompt to give your AI assistant clear guidance on using the
   </role>
   <tools>
     <tool name="health_check">Check that the MCP server is running and reachable.</tool>
-    <tool name="get_root_path">Return the configured root directory path. Call this first to discover the starting point for file listing.</tool>
-    <tool name="list_folder">List the contents of a directory. Requires an absolute path within the configured root. Returns name, size_mb, date_created, date_modified, and is_folder for each entry. Pass folders_only=true to list only subdirectories.</tool>
+    <tool name="list_root_paths">Return the configured root directory paths. Call this first to discover the starting points for file listing.</tool>
+    <tool name="list_folder">List the contents of a directory. Requires an absolute path within one of the configured roots. Returns name, size_mb, date_created, date_modified, and is_folder for each entry. Pass folders_only=true to list only subdirectories.</tool>
   </tools>
   <guidelines>
     <item>Call health_check if the user asks whether the server is available.</item>
-    <item>Call get_root_path before attempting to list files so you know where to start.</item>
-    <item>Use list_folder with the path returned by get_root_path to browse the filesystem.</item>
+    <item>Call list_root_paths before attempting to list files so you know where to start.</item>
+    <item>Use list_folder with a path returned by list_root_paths to browse the filesystem.</item>
     <item>Do not guess paths — only navigate to paths you have discovered through the tools.</item>
   </guidelines>
 </system>
@@ -205,8 +205,8 @@ Copy and adapt this prompt to give your AI assistant clear guidance on using the
 | Tool | Description |
 |---|---|
 | `health_check` | Returns `{"status": "ok"}` to confirm the server is running. |
-| `get_root_path` | Returns the configured root directory path. Call this first to discover where to start listing. |
-| `list_folder` | Lists the contents of a directory within the configured root. Returns name, size (MB), dates, and type for each entry. |
+| `list_root_paths` | Returns the configured root directory paths. Call this first to discover where to start listing. |
+| `list_folder` | Lists the contents of a directory within one of the configured roots. Returns name, size (MB), dates, and type for each entry. |
 
 ---
 

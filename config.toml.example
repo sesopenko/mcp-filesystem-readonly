@@ -6,4 +6,4 @@ port = 8080
 level = "info"
 
 [filesystem]
-root = "/mnt/video"  # absolute path to the directory exposed via list_folder
+roots = "/mnt/video"  # comma-separated list of absolute paths exposed via list_folder (e.g. "/mnt/video,/mnt/music")

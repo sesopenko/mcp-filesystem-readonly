@@ -15,28 +15,28 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-def get_root_path(root: str) -> str:
-    """Return the configured root path for filesystem access.
+def list_root_paths(roots: list[str]) -> list[str]:
+    """Return the configured root paths for filesystem access.
 
     Args:
-        root: The configured root directory path.
+        roots: The list of configured root directory paths.
 
     Returns:
-        The root path string as configured.
+        The list of root path strings as configured.
     """
-    return root
+    return roots
 
 
 def list_folder(
     path: str,
-    root: str,
+    roots: list[str],
     folders_only: bool = False,
 ) -> list[dict[str, Any]]:
-    """List the contents of a directory within the configured root.
+    """List the contents of a directory within the configured roots.
 
     Args:
-        path: Absolute path of the directory to list. Must be within *root*.
-        root: The configured root directory. Entries outside this path are blocked.
+        path: Absolute path of the directory to list. Must be within one of *roots*.
+        roots: The configured root directories. Entries outside all of these paths are blocked.
         folders_only: When ``True``, only directory entries are returned.
 
     Returns:
@@ -44,7 +44,7 @@ def list_folder(
         ``date_modified``, and ``is_folder``. ``size_mb`` is ``0.0`` for directories.
 
     Raises:
-        ValueError: If *path* is relative, or resolves to a location outside *root*.
+        ValueError: If *path* is relative, or resolves outside all configured roots.
         FileNotFoundError: If *path* does not exist.
         NotADirectoryError: If *path* is not a directory.
     """
@@ -52,10 +52,12 @@ def list_folder(
         raise ValueError(f"Path must be absolute, got: {path!r}")
 
     resolved_path = Path(path).resolve()
-    resolved_root = Path(root).resolve()
-
-    if resolved_path != resolved_root and not str(resolved_path).startswith(str(resolved_root) + os.sep):
-        raise ValueError(f"Path is outside the configured folder: {path!r}")
+    for root in roots:
+        resolved_root = Path(root).resolve()
+        if resolved_path == resolved_root or str(resolved_path).startswith(str(resolved_root) + os.sep):
+            break
+    else:
+        raise ValueError(f"Path is outside all configured roots: {path!r}")
 
     entries: list[dict[str, Any]] = []
     with os.scandir(resolved_path) as it:

@@ -17,7 +17,7 @@ port = 8080
 level = "debug"
 
 [filesystem]
-root = "/mnt/video"
+roots = "/tmp/a,/tmp/b"
 """
 
 
@@ -74,12 +74,50 @@ def test_load_config_invalid_toml_raises() -> None:
             load_config(Path("config.toml"))
 
 
-def test_load_config_filesystem_root() -> None:
-    """load_config correctly parses [filesystem] root value."""
+def test_load_config_filesystem_roots() -> None:
+    """load_config correctly parses [filesystem] roots as a list."""
     with patch("builtins.open", mock_open(read_data=VALID_TOML)):
         config = load_config(Path("config.toml"))
 
-    assert config.filesystem.root == "/mnt/video"
+    assert config.filesystem.roots == ["/tmp/a", "/tmp/b"]
+
+
+def test_load_config_filesystem_single_root() -> None:
+    """load_config parses a single path (no comma) as a one-element list."""
+    single = b"""
+[server]
+host = "0.0.0.0"
+port = 8080
+
+[logging]
+level = "info"
+
+[filesystem]
+roots = "/tmp"
+"""
+    with patch("builtins.open", mock_open(read_data=single)):
+        config = load_config(Path("config.toml"))
+
+    assert config.filesystem.roots == ["/tmp"]
+
+
+def test_load_config_filesystem_roots_whitespace_trimmed() -> None:
+    """load_config strips whitespace from each root path."""
+    padded = b"""
+[server]
+host = "0.0.0.0"
+port = 8080
+
+[logging]
+level = "info"
+
+[filesystem]
+roots = " /tmp/a , /tmp/b "
+"""
+    with patch("builtins.open", mock_open(read_data=padded)):
+        config = load_config(Path("config.toml"))
+
+    assert config.filesystem.roots == ["/tmp/a", "/tmp/b"]
 
 
 def test_load_config_missing_filesystem_raises() -> None:
