@@ -4,3 +4,6 @@ port = 8080
 
 [logging]
 level = "info"
+
+[filesystem]
+root = "/mnt/video"  # absolute path to the directory exposed via list_folder

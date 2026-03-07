@@ -1,13 +1,13 @@
 <!-- This file is copy-pasted into Docker Hub as the repository overview.
      It is NOT developer documentation. Do not read this for project context.
      Edit it only when tools, config, Docker Compose examples, or endpoints change. -->
-# mcp-base
+# mcp-filesystem-readonly
 
-A bare-bones [FastMCP](https://github.com/jlowin/fastmcp) server template. Fork this repository to build your own MCP server without starting from scratch.
+A read-only filesystem [FastMCP](https://github.com/jlowin/fastmcp) server. Configure a root directory and let AI assistants browse its contents via MCP tools.
 
-[MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools and services. This template implements MCP over HTTP so any MCP-compatible AI application can reach your server.
+[MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools and services. This server implements MCP over HTTP so any MCP-compatible AI application can reach it.
 
-GitHub: [sesopenko/mcp-base](https://github.com/sesopenko/mcp-base)
+GitHub: [sesopenko/mcp-filesystem-readonly](https://github.com/sesopenko/mcp-filesystem-readonly)
 
 ---
 
@@ -19,12 +19,13 @@ GitHub: [sesopenko/mcp-base](https://github.com/sesopenko/mcp-base)
 
    ```yaml
    services:
-     mcp-base:
-       image: sesopenko/mcp-base:latest
+     mcp-filesystem-readonly:
+       image: sesopenko/mcp-filesystem-readonly:latest
        ports:
          - "8080:8080"
        volumes:
          - ./config.toml:/config/config.toml:ro
+         - /mnt/video:/mnt/video:ro
        restart: unless-stopped
    ```
 
@@ -53,6 +54,9 @@ port = 8080        # port the MCP server listens on
 
 [logging]
 level = "info"     # log verbosity: debug, info, warning, error
+
+[filesystem]
+root = "/mnt/video"  # absolute path to the directory exposed via list_folder
 ```
 
 ---
@@ -79,7 +83,9 @@ Consult your AI application's documentation for how to register an MCP server.
 
 | Tool | Description |
 |---|---|
-| `health_check` | Returns `{"status": "ok"}` to confirm the server is running. This is a placeholder — replace it with your own tools. |
+| `health_check` | Returns `{"status": "ok"}` to confirm the server is running. |
+| `get_root_path` | Returns the configured root directory path. Call this first to discover where to start listing. |
+| `list_folder` | Lists the contents of a directory within the configured root. Returns name, size (MB), dates, and type for each entry. |
 
 ---
 
@@ -87,7 +93,7 @@ Consult your AI application's documentation for how to register an MCP server.
 
 Copyright (c) Sean Esopenko 2026
 
-Licensed under the [GNU General Public License v3.0](https://github.com/sesopenko/mcp-base/blob/main/LICENSE.txt).
+Licensed under the [GNU General Public License v3.0](https://github.com/sesopenko/mcp-filesystem-readonly/blob/main/LICENSE.txt).
 
 ---
 
@@ -97,6 +103,6 @@ This project was built with the assistance of [Claude Code](https://claude.ai/co
 
 AI assistants like Claude are trained on enormous amounts of data — much of it written by the open-source community: the libraries, tools, documentation, and decades of shared knowledge that developers have contributed freely. Without that foundation, tools like this would not be possible.
 
-In recognition of that debt, this project is released under the [GNU General Public License v3.0](https://github.com/sesopenko/mcp-base/blob/main/LICENSE.txt). The GPL ensures that this code — and any derivative work — remains open source. It is a small act of reciprocity: giving back to the commons that made it possible.
+In recognition of that debt, this project is released under the [GNU General Public License v3.0](https://github.com/sesopenko/mcp-filesystem-readonly/blob/main/LICENSE.txt). The GPL ensures that this code — and any derivative work — remains open source. It is a small act of reciprocity: giving back to the commons that made it possible.
 
 To every developer who ever pushed a commit to a public repo, wrote a Stack Overflow answer, or published a package under an open license — thank you.

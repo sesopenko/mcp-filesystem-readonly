@@ -1,4 +1,4 @@
-"""Configuration loading for the mcp-base server.
+"""Configuration loading for the mcp-filesystem-readonly server.
 
 Reads a TOML config file and returns typed dataclass instances for each
 section. The default config path is ``config.toml`` in the working directory;
@@ -26,11 +26,19 @@ class LoggingConfig:
 
 
 @dataclass
+class FilesystemConfig:
+    """Filesystem access settings."""
+
+    root: str
+
+
+@dataclass
 class AppConfig:
     """Top-level application configuration, parsed from a TOML file."""
 
     server: ServerConfig
     logging: LoggingConfig
+    filesystem: FilesystemConfig
 
 
 def load_config(path: Path = Path("config.toml")) -> AppConfig:
@@ -58,4 +66,7 @@ def load_config(path: Path = Path("config.toml")) -> AppConfig:
     logging = LoggingConfig(
         level=raw["logging"]["level"],
     )
-    return AppConfig(server=server, logging=logging)
+    filesystem = FilesystemConfig(
+        root=raw["filesystem"]["root"],
+    )
+    return AppConfig(server=server, logging=logging, filesystem=filesystem)

@@ -1,11 +1,11 @@
-# mcp-base
+# mcp-filesystem-readonly
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE.txt)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13%2B-blue)](https://www.python.org/downloads/)
 
-A bare-bones [FastMCP](https://github.com/jlowin/fastmcp) server template. Use this as a starting point to build your own MCP server without starting from scratch.
+A read-only filesystem [FastMCP](https://github.com/jlowin/fastmcp) server. Configure a root directory and let AI assistants browse its contents via MCP tools.
 
-[MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools and services. This template implements MCP over HTTP so any MCP-compatible AI application can reach your server.
+[MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools and services. This server implements MCP over HTTP so any MCP-compatible AI application can reach it.
 
 ---
 
@@ -54,12 +54,13 @@ The script is idempotent — safe to run multiple times.
 
    ```yaml
    services:
-     mcp-base:
-       image: sesopenko/mcp-base:latest
+     mcp-filesystem-readonly:
+       image: sesopenko/mcp-filesystem-readonly:latest
        ports:
          - "8080:8080"
        volumes:
          - ./config.toml:/config/config.toml:ro
+         - /mnt/video:/mnt/video:ro
        restart: unless-stopped
    ```
 
@@ -120,6 +121,9 @@ port = 8080
 
 [logging]
 level = "info"
+
+[filesystem]
+root = "/mnt/video"
 ```
 
 ### [server]
@@ -134,6 +138,12 @@ level = "info"
 | Key | Default | Description |
 |---|---|---|
 | `level` | `"info"` | Log verbosity. One of: `debug`, `info`, `warning`, `error`. |
+
+### [filesystem]
+
+| Key | Required | Description |
+|---|---|---|
+| `root` | yes | Absolute path to the directory exposed via `list_folder`. Only paths within this root can be listed. |
 
 ---
 
@@ -171,14 +181,19 @@ Copy and adapt this prompt to give your AI assistant clear guidance on using the
 ```xml
 <system>
   <role>
-    You are a helpful assistant with access to an MCP server. Use the available
-    tools to fulfil user requests accurately and efficiently.
+    You are a helpful assistant with access to a read-only filesystem MCP server.
+    Use the available tools to browse and describe files at the user's request.
   </role>
   <tools>
     <tool name="health_check">Check that the MCP server is running and reachable.</tool>
+    <tool name="get_root_path">Return the configured root directory path. Call this first to discover the starting point for file listing.</tool>
+    <tool name="list_folder">List the contents of a directory. Requires an absolute path within the configured root. Returns name, size_mb, date_created, date_modified, and is_folder for each entry. Pass folders_only=true to list only subdirectories.</tool>
   </tools>
   <guidelines>
     <item>Call health_check if the user asks whether the server is available.</item>
+    <item>Call get_root_path before attempting to list files so you know where to start.</item>
+    <item>Use list_folder with the path returned by get_root_path to browse the filesystem.</item>
+    <item>Do not guess paths — only navigate to paths you have discovered through the tools.</item>
   </guidelines>
 </system>
 ```
@@ -190,8 +205,8 @@ Copy and adapt this prompt to give your AI assistant clear guidance on using the
 | Tool | Description |
 |---|---|
 | `health_check` | Returns `{"status": "ok"}` to confirm the server is running. |
-
-> Tools are documented here as they are implemented.
+| `get_root_path` | Returns the configured root directory path. Call this first to discover where to start listing. |
+| `list_folder` | Lists the contents of a directory within the configured root. Returns name, size (MB), dates, and type for each entry. |
 
 ---
 
@@ -203,7 +218,7 @@ The template follows a clean three-layer separation:
 |---|---|
 | `src/mcp_base/tools.py` | Pure Python functions — one function per tool, no framework coupling |
 | `src/mcp_base/server.py` | FastMCP wiring — registers tool functions with `@mcp.tool()` and runs the server |
-| `src/mcp_base/config.py` | TOML config loading — typed dataclasses for `[server]` and `[logging]` sections |
+| `src/mcp_base/config.py` | TOML config loading — typed dataclasses for `[server]`, `[logging]`, and `[filesystem]` sections |
 | `src/mcp_base/logging.py` | Structured logger factory |
 
 ### Adding a tool

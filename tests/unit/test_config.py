@@ -6,7 +6,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from mcp_base.config import AppConfig, LoggingConfig, ServerConfig, load_config
+from mcp_base.config import AppConfig, FilesystemConfig, LoggingConfig, ServerConfig, load_config
 
 VALID_TOML = b"""
 [server]
@@ -15,6 +15,9 @@ port = 8080
 
 [logging]
 level = "debug"
+
+[filesystem]
+root = "/mnt/video"
 """
 
 
@@ -26,6 +29,7 @@ def test_load_config_returns_correct_types() -> None:
     assert isinstance(config, AppConfig)
     assert isinstance(config.server, ServerConfig)
     assert isinstance(config.logging, LoggingConfig)
+    assert isinstance(config.filesystem, FilesystemConfig)
 
 
 def test_load_config_server_values() -> None:
@@ -67,4 +71,27 @@ def test_load_config_invalid_toml_raises() -> None:
     """load_config raises TOMLDecodeError when the file is malformed."""
     with patch("builtins.open", mock_open(read_data=b"not valid toml [[[[")):
         with pytest.raises(tomllib.TOMLDecodeError):
+            load_config(Path("config.toml"))
+
+
+def test_load_config_filesystem_root() -> None:
+    """load_config correctly parses [filesystem] root value."""
+    with patch("builtins.open", mock_open(read_data=VALID_TOML)):
+        config = load_config(Path("config.toml"))
+
+    assert config.filesystem.root == "/mnt/video"
+
+
+def test_load_config_missing_filesystem_raises() -> None:
+    """load_config raises KeyError when [filesystem] section is absent."""
+    no_filesystem = b"""
+[server]
+host = "0.0.0.0"
+port = 8080
+
+[logging]
+level = "info"
+"""
+    with patch("builtins.open", mock_open(read_data=no_filesystem)):
+        with pytest.raises(KeyError):
             load_config(Path("config.toml"))
