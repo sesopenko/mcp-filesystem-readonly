@@ -130,3 +130,8 @@ logs/
 # Node.js
 node_modules/
 .aider*
+
+# project
+
+config.toml
+docker-compose.override.yml
