@@ -187,12 +187,15 @@ Copy and adapt this prompt to give your AI assistant clear guidance on using the
   <tools>
     <tool name="health_check">Check that the MCP server is running and reachable.</tool>
     <tool name="list_root_paths">Return the configured root directory paths. Call this first to discover the starting points for file listing.</tool>
-    <tool name="list_folder">List the contents of a directory. Requires an absolute path within one of the configured roots. Returns name, size_mb, date_created, date_modified, and is_folder for each entry. Pass folders_only=true to list only subdirectories.</tool>
+    <tool name="list_inclusion_filters">Return all available filters for list_folder. Filters reduce token cost by excluding metadata and sidecar files (like .nfo, .jpg, .srt). Built-in filters include "all", "folders_only", "videos", "music", and "pictures".</tool>
+    <tool name="list_folder">List the contents of a directory. Requires an absolute path within one of the configured roots and a filter name from list_inclusion_filters. Returns name, size_mb, and is_folder for each entry.</tool>
   </tools>
   <guidelines>
     <item>Call health_check if the user asks whether the server is available.</item>
     <item>Call list_root_paths before attempting to list files so you know where to start.</item>
-    <item>Use list_folder with a path returned by list_root_paths to browse the filesystem.</item>
+    <item>Call list_inclusion_filters to discover available filters before calling list_folder.</item>
+    <item>Use list_folder with a path returned by list_root_paths and an appropriate filter name to browse the filesystem efficiently.</item>
+    <item>Prefer specific filters (videos, music, pictures) over "all" to reduce token usage when browsing media directories.</item>
     <item>Do not guess paths — only navigate to paths you have discovered through the tools.</item>
   </guidelines>
 </system>
@@ -206,7 +209,8 @@ Copy and adapt this prompt to give your AI assistant clear guidance on using the
 |---|---|
 | `health_check` | Returns `{"status": "ok"}` to confirm the server is running. |
 | `list_root_paths` | Returns the configured root directory paths. Call this first to discover where to start listing. |
-| `list_folder` | Lists the contents of a directory within one of the configured roots. Returns name, size (MB), dates, and type for each entry. |
+| `list_inclusion_filters` | Returns all available filters for `list_folder`, including built-in filters for videos, music, and pictures. Use to reduce token cost by filtering out metadata files. |
+| `list_folder` | Lists the contents of a directory within one of the configured roots. Requires an `inclusion_filter_name` parameter (call `list_inclusion_filters` to discover valid names). Returns name, size (MB), and type for each entry. |
 
 ---
 

@@ -85,7 +85,8 @@ Consult your AI application's documentation for how to register an MCP server.
 |---|---|
 | `health_check` | Returns `{"status": "ok"}` to confirm the server is running. |
 | `list_root_paths` | Returns the configured root directory paths. Call this first to discover where to start listing. |
-| `list_folder` | Lists the contents of a directory within one of the configured roots. Returns name, size (MB), dates, and type for each entry. |
+| `list_inclusion_filters` | Returns all available filters for `list_folder`, including built-in filters for videos, music, and pictures. Use to reduce token cost by filtering out metadata files. |
+| `list_folder` | Lists the contents of a directory within one of the configured roots. Requires an `inclusion_filter_name` parameter (call `list_inclusion_filters` to discover valid names). Returns name, size (MB), and type for each entry. |
 
 ---
 
